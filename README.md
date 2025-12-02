@@ -1,69 +1,162 @@
-import pandas as pd
-import matplotlib.pyplot as plt
-from sklearn.model_selection import train_test_split
-from sklearn.linear_model import LinearRegression
-from sklearn.metrics import mean_squared_error
-from sklearn.preprocessing import StandardScaler
-from sklearn.pipeline import Pipeline
-import numpy as np
+using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Data;
+using System.Drawing;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows.Forms;
+using System.Xml;
 
-# 1. ĐỌC DỮ LIỆU
-import pandas as pd
+namespace Bai3
+{
+    public partial class Form1 : Form
+    {
+        public Form1()
+        {
+            InitializeComponent();
+        }
+        XmlDocument doc = new XmlDocument();
+        string tentep = @"C:\Users\ADMIN\Downloads\Bai3\nhanvien.xml";
+        int d;
+        private void HienThi()
+        {
+            datanhanvien.Rows.Clear();
+            doc.Load(tentep);
+            XmlNodeList DS = doc.SelectNodes("/ds/nhanvien");
+            int sd = 0;
+            datanhanvien.ColumnCount = 4;
+            datanhanvien.Rows.Add();
 
-DATA_PATH = r"C:/Users/ADMIN/Downloads/airfoil+self+noise/airfoil_self_noise.dat"
+            foreach (XmlNode nhan_vien in DS)
+            {
+                XmlNode ma_nv = nhan_vien.SelectSingleNode("@manv");
+                datanhanvien.Rows[sd].Cells[0].Value = ma_nv.InnerText.ToString();
+                XmlNode ho = nhan_vien.SelectSingleNode("hoten/ho");
+                datanhanvien.Rows[sd].Cells[1].Value = ho.InnerText.ToString();
+                XmlNode ten = nhan_vien.SelectSingleNode("hoten/ten");
+                datanhanvien.Rows[sd].Cells[2].Value = ten.InnerText.ToString();
+                XmlNode dia_chi = nhan_vien.SelectSingleNode("diachi");
+                datanhanvien.Rows[sd].Cells[3].Value = dia_chi.InnerText.ToString();
+                datanhanvien.Rows.Add();
+                sd++;
+            }
+        }
 
-df = pd.read_csv(DATA_PATH, sep=r"\s+", header=None)
+        private void Form1_Load(object sender, EventArgs e)
+        {
+            HienThi();
+        }
 
-df.columns = ["Frequency", "Angle", "Chord", "Velocity", "Thickness", "SSPL"]
+        private void bt_them_Click(object sender, EventArgs e)
+        {
+            doc.Load(tentep);
+            XmlElement goc = doc.DocumentElement;
 
-print(df.head())
+            XmlNode nhan_vien = doc.CreateElement("nhanvien");
+            XmlAttribute ma_nv = doc.CreateAttribute("manv");
+            ma_nv.InnerText = txt_ma.Text;
+            nhan_vien.Attributes.Append(ma_nv);
 
-# Biểu đồ 1: Chord vs Velocity (màu theo SSPL)
-plt.scatter(df["Chord"], df["Velocity"], c=df["SSPL"], cmap="viridis")
-plt.colorbar(label="SSPL (dB)")
-plt.xlabel("Chord (m)")
-plt.ylabel("Velocity (m/s)")
-plt.title("(b1) Chord vs Velocity – màu theo SSPL")
-plt.grid(True)
-plt.show()
+            XmlNode ho_ten = doc.CreateElement("hoten");
+            XmlNode ho = doc.CreateElement("ho");
+            ho.InnerText = txt_ho.Text;
+            ho_ten.AppendChild(ho);
 
-# Biểu đồ 2: Velocity vs SSPL (màu theo SSPL)
-plt.scatter(df["Velocity"], df["SSPL"], c=df["SSPL"], cmap="inferno")
-plt.colorbar(label="SSPL (dB)")
-plt.xlabel("Velocity (m/s)")
-plt.ylabel("SSPL (dB)")
-plt.title("(b2) Velocity vs SSPL – màu theo SSPL")
-plt.grid(True)
-plt.show()
+            XmlNode ten = doc.CreateElement("ten");
+            ten.InnerText = txt_ten.Text;
+            ho_ten.AppendChild(ten);
 
-#Huấn luyện
-# ---------------------------------------------------------------
-X = df[["Frequency", "Angle", "Chord", "Velocity", "Thickness"]]
-y = df["SSPL"]
+            nhan_vien.AppendChild(ho_ten);
 
-X_train, X_test, y_train, y_test = train_test_split(
-    X, y, test_size=0.2, random_state=42
-)
+            XmlNode dia_chi = doc.CreateElement("diachi");
+            dia_chi.InnerText = txt_diachi.Text;
+            nhan_vien.AppendChild (dia_chi);
 
-# Dùng Linear Regression + chuẩn hóa
-model = Pipeline([
-    ("scaler", StandardScaler()),
-    ("lr", LinearRegression())
-])
+            goc.AppendChild(nhan_vien);
 
-model.fit(X_train, y_train)
+            doc.Save(tentep);
+            HienThi();
 
-#Hiển thị kqua
-y_pred = model.predict(X_test)
-mse = mean_squared_error(y_test, y_pred)
-print("MSE trên tập test =", mse)
+        }
 
-#Tói ưu mo hinh
-mse_target = np.var(y_test) * 0.10   
+        private void bt_sua_Click(object sender, EventArgs e)
+        {
+            doc.Load(tentep);
+            XmlElement goc = doc.DocumentElement;
 
-print("Ngưỡng MSE mục tiêu (10% variance) =", mse_target)
+            XmlNode nhanviencu = goc.SelectSingleNode("/ds/nhanvien[@manv='" + txt_ma.Text + "']");
+            XmlNode nhanvienmoi = doc.CreateElement("nhanvien");
 
-if mse <= mse_target:
-    print(" MSE đạt yêu cầu < 10%")
-else:
-    print(" MSE chưa đạt yêu cầu")
+            XmlAttribute ma_nv = doc.CreateAttribute("manv");
+            ma_nv.InnerText = txt_ma.Text;
+            nhanvienmoi.Attributes.Append(ma_nv);
+
+            XmlNode ho_ten = doc.CreateElement("hoten");
+            XmlNode ho = doc.CreateElement("ho");
+            ho.InnerText = txt_ho.Text;
+            ho_ten.AppendChild(ho);
+
+            XmlNode ten = doc.CreateElement("ten");
+            ten.InnerText = txt_ten.Text;
+            ho_ten.AppendChild(ten);
+
+            nhanvienmoi.AppendChild(ho_ten);
+
+            XmlNode dia_chi = doc.CreateElement("diachi");
+            dia_chi.InnerText = txt_diachi.Text;
+            nhanvienmoi.AppendChild(dia_chi);
+
+            goc.ReplaceChild(nhanvienmoi, nhanviencu);
+            doc.Save(tentep);
+            HienThi();
+
+        }
+
+        private void bt_xoa_Click(object sender, EventArgs e)
+        {
+            doc.Load(tentep);
+            XmlElement goc = doc.DocumentElement;
+
+            XmlNode nhan_vien_xoa = goc.SelectSingleNode("/ds/nhanvien[@manv='" + txt_ma.Text + "']");
+            goc.RemoveChild(nhan_vien_xoa);
+
+            doc.Save(tentep);
+            HienThi() ;
+        }
+
+        private void bt_tim_Click(object sender, EventArgs e)
+        {
+            
+            doc.Load(tentep);
+            XmlElement goc = doc.DocumentElement;
+            datanhanvien.Rows.Clear();
+            XmlNode nhan_vien_tim = goc.SelectSingleNode("/ds/nhanvien[@manv='" + txt_ma.Text + "']");
+            int sd = 0;
+            if (nhan_vien_tim != null)
+            {
+
+                XmlNode ma_nv = nhan_vien_tim.SelectSingleNode("@manv");
+                datanhanvien.Rows[sd].Cells[0].Value = ma_nv.InnerText.ToString();
+                XmlNode ho = nhan_vien_tim.SelectSingleNode("hoten/ho");
+                datanhanvien.Rows[sd].Cells[1].Value = ho.InnerText.ToString();
+                XmlNode ten = nhan_vien_tim.SelectSingleNode("hoten/ten");
+                datanhanvien.Rows[sd].Cells[2].Value = ten.InnerText.ToString();
+                XmlNode dia_chi = nhan_vien_tim.SelectSingleNode("diachi");
+                datanhanvien.Rows[sd].Cells[3].Value = dia_chi.InnerText.ToString();
+    
+        
+            }
+        }
+
+        private void datanhanvien_CellClick(object sender, DataGridViewCellEventArgs e)
+        {
+            d = e.RowIndex;
+            txt_ma.Text = datanhanvien.Rows[d].Cells[0].Value.ToString();
+            txt_ho.Text = datanhanvien.Rows[d].Cells[1].Value.ToString();
+            txt_ten.Text = datanhanvien.Rows[d].Cells[2].Value.ToString();
+            txt_diachi.Text = datanhanvien.Rows[d].Cells[3].Value.ToString();
+        }
+    }
+}
